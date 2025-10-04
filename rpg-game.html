@@ -1,0 +1,486 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Games — WarGames (Text RPG)</title>
+  <style>
+    :root{--bg:#0f1724;--panel:#0b1220;--accent:#7dd3fc;--muted:#94a3b8;--good:#86efac;--bad:#fda4af}
+    body{font-family:Inter,Segoe UI,Roboto,system-ui,Arial;color:#e6eef8;background:linear-gradient(180deg,#031025 0%, #071233 100%);margin:0;height:100vh;display:flex;align-items:center;justify-content:center}
+    .container{width:920px;max-width:95%;padding:28px;background:rgba(255,255,255,0.02);border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    h1{font-size:20px;margin:0;color:var(--accent)}
+    .games-list{display:flex;gap:12px}
+    .game-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px 18px;border-radius:10px;cursor:pointer;border:1px solid rgba(125,211,252,0.06)}
+    .game-card:hover{transform:translateY(-4px);transition:transform .15s}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.7);display:none;align-items:center;justify-content:center}
+    .modal{width:840px;max-width:96%;background:var(--panel);padding:18px;border-radius:12px;border:1px solid rgba(125,211,252,0.06);box-shadow:0 18px 60px rgba(2,6,23,0.8);}
+    .modal header{display:flex;justify-content:space-between;align-items:center}
+    .console{height:380px;overflow:auto;background:linear-gradient(180deg,#021226 0%, #051a2f 100%);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-family:monospace;font-size:13px;color:#cfe8ff}
+    .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .btn{background:transparent;color:var(--accent);border:1px solid rgba(125,211,252,0.12);padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .panel-small{display:flex;gap:12px;margin-top:12px}
+    .statbox{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);min-width:200px}
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:10px;align-items:center}
+    .select{padding:8px;border-radius:6px;background:#07142a;color:#dff5ff;border:1px solid rgba(125,211,252,0.06)}
+    .danger{color:var(--bad)}
+    .success{color:var(--good)}
+    footer{margin-top:12px;font-size:12px;color:var(--muted)}
+    @media(max-width:760px){.console{height:300px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Games hub — Click a game to open (single-file: games.html)</h1>
+      <div class="games-list">
+        <div class="game-card" id="openWar">WarGames — Text RPG</div>
+        <div class="game-card" title="(placeholder)">Coming soon...</div>
+      </div>
+    </header>
+    <p class="muted">Click <strong>WarGames</strong> to open the modal with the full textual RPG experience. The experience is fully contained and designed to be challenging and replayable.</p>
+    <footer>Game: <strong>WarGames</strong> — 7 progressive levels, randomized items and monsters, turn-based combat.</footer>
+  </div>
+
+  <div class="modal-backdrop" id="modalWrap" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header>
+        <div>
+          <h2 id="modalTitle" style="margin:0;color:var(--accent)">WarGames — Text RPG (7 levels)</h2>
+          <div class="muted">Tactical, turn-based textual combat. Choose gear, manage mana, and survive 7 levels.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="restartBtn">Restart</button>
+          <button class="btn" id="closeModal">Close</button>
+        </div>
+      </header>
+
+      <main style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+        <section style="flex:1;min-width:320px;">
+          <div class="console" id="console" tabindex="0"></div>
+
+          <div class="controls">
+            <select id="actionSelect" class="select">
+              <option value="attack">Attack</option>
+              <option value="skill">Use Skill</option>
+              <option value="defend">Defend</option>
+              <option value="item">Use Potion</option>
+              <option value="flee">Attempt Flee</option>
+            </select>
+            <button class="btn" id="doAction">Do</button>
+            <button class="btn" id="autoFight">Auto Fight</button>
+            <button class="btn" id="skipToNext" title="(for testing) skip to next level">Skip Level</button>
+          </div>
+        </section>
+
+        <aside style="width:360px;min-width:260px">
+          <div class="statbox">
+            <div class="muted">Player</div>
+            <div id="playerName" style="font-weight:600;color:var(--accent)">Adventurer</div>
+            <div class="row" style="justify-content:space-between;margin-top:6px">
+              <div>HP: <span id="pHP">--</span></div>
+              <div>Mana: <span id="pMana">--</span></div>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-top:6px">
+              <div>Attack: <span id="pAtk">--</span></div>
+              <div>Defense: <span id="pDef">--</span></div>
+            </div>
+            <div style="margin-top:8px" class="muted">Gear</div>
+            <div class="row" style="margin-top:6px">
+              <div>Weapon: <select id="weaponSelect" class="select"></select></div>
+            </div>
+            <div class="row" style="margin-top:6px">
+              <div>Armor: <select id="armorSelect" class="select"></select></div>
+            </div>
+            <div style="margin-top:8px" class="muted">Consumables</div>
+            <div class="row" style="margin-top:6px">
+              <div>Potion x <span id="potions">3</span></div>
+              <button class="btn" id="buyPotion">Buy Potion (XP)</button>
+            </div>
+          </div>
+
+          <div class="statbox" style="margin-top:12px">
+            <div class="muted">Enemy</div>
+            <div id="enemyName" style="font-weight:600;color:#ffb86b">—</div>
+            <div class="row" style="justify-content:space-between;margin-top:6px">
+              <div>HP: <span id="eHP">--</span></div>
+              <div>Mana: <span id="eMana">--</span></div>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-top:6px">
+              <div>Attack: <span id="eAtk">--</span></div>
+              <div>Defense: <span id="eDef">--</span></div>
+            </div>
+            <div style="margin-top:8px" class="muted">Progress</div>
+            <div class="row" style="justify-content:space-between;margin-top:6px">
+              <div>Level: <span id="levelNum">1</span>/7</div>
+              <div>XP: <span id="xp">0</span></div>
+            </div>
+          </div>
+
+        </aside>
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+  // --- Data and helpers ---
+  const materials = {
+    Wood: {atk: -1, def: -1, hp: -5, manaCostMult: 1.1},
+    Iron: {atk: 0, def: 1, hp: 0, manaCostMult: 1.0},
+    Steel: {atk: 2, def: 2, hp: 10, manaCostMult: 0.98},
+    Mithril: {atk: 4, def: 3, hp: 18, manaCostMult: 0.9},
+    Dragonbone: {atk: 7, def: 5, hp: 30, manaCostMult: 0.85}
+  };
+
+  const weaponTypes = [
+    {id:'Sword', baseAtk:6, manaCost:6},
+    {id:'Axe', baseAtk:8, manaCost:8},
+    {id:'Wand', baseAtk:3, manaCost:2, magic:true},
+    {id:'Spear', baseAtk:5, manaCost:5},
+    {id:'Dagger', baseAtk:4, manaCost:3, speedBonus:1}
+  ];
+
+  const armorTypes = [
+    {id:'Cloth', baseDef:1, hp:0, manaBonus:5},
+    {id:'Leather', baseDef:2, hp:6, manaBonus:2},
+    {id:'Chain', baseDef:4, hp:12, manaBonus:0},
+    {id:'Plate', baseDef:6, hp:22, manaBonus:-4}
+  ];
+
+  const monsters = [
+    {name:'Goblin', atk:4, def:1, hp:30, mana:6, xp:12},
+    {name:'Skeleton', atk:6, def:2, hp:40, mana:8, xp:20},
+    {name:'War Hound', atk:8, def:3, hp:55, mana:10, xp:28},
+    {name:'Orc Berserker', atk:11, def:4, hp:75, mana:14, xp:50},
+    {name:'Dark Knight', atk:14, def:6, hp:110, mana:20, xp:85},
+    {name:'Mage of Ash', atk:16, def:5, hp:140, mana:48, xp:120},
+    {name:'Wyrmling', atk:21, def:8, hp:200, mana:60, xp:220}
+  ];
+
+  // --- Game state ---
+  let state = null;
+
+  function newGame(){
+    state = {
+      level:1,
+      xp:0,
+      potions:3,
+      player:{
+        name:'Adventurer',
+        baseHP:100,
+        baseMana:40,
+        baseAtk:5,
+        baseDef:2,
+        weapon:{type:'Sword',material:'Iron'},
+        armor:{type:'Leather',material:'Iron'},
+        hp:null,mana:null,atk:null,def:null
+      },
+      enemy:null,
+      log:[],
+      auto:false
+    };
+    populateGearSelectors();
+    equipFromSelection();
+    spawnEnemy();
+    renderAll();
+    writeLine('Welcome, brave Adventurer. Your quest: survive 7 levels.');
+    writeLine('Choose an action and click Do. Use skill when you have mana. Good luck!');
+  }
+
+  // --- UI helpers ---
+  const $ = id => document.getElementById(id);
+  function writeLine(t, cls){
+    const c = $('console');
+    const el = document.createElement('div');
+    if(cls) el.className = cls;
+    el.textContent = '> ' + t;
+    c.appendChild(el);
+    c.scrollTop = c.scrollHeight;
+    state.log.push(t);
+    if(state.log.length>800) state.log.shift();
+  }
+
+  function populateGearSelectors(){
+    const wsel = $('weaponSelect');
+    const asel = $('armorSelect');
+    wsel.innerHTML = '';
+    asel.innerHTML = '';
+    Object.keys(materials).forEach(mat=>{
+      weaponTypes.forEach(w=>{
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({type:w.id,material:mat});
+        opt.textContent = `${w.id} (${mat})`;
+        wsel.appendChild(opt);
+      });
+      armorTypes.forEach(a=>{
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({type:a.id,material:mat});
+        opt.textContent = `${a.id} (${mat})`;
+        asel.appendChild(opt);
+      });
+    });
+
+    // pick some defaults
+    wsel.selectedIndex = 0;
+    asel.selectedIndex = 3;
+  }
+
+  function equipFromSelection(){
+    const w = JSON.parse($('weaponSelect').value);
+    const a = JSON.parse($('armorSelect').value);
+    state.player.weapon = w;
+    state.player.armor = a;
+    recalcPlayerStats();
+    renderAll();
+  }
+
+  function recalcPlayerStats(){
+    const p = state.player;
+    // base stats scaled by level
+    const levelScale = 1 + (state.level-1)*0.12;
+    let baseHP = Math.floor(p.baseHP * levelScale);
+    let baseMana = Math.floor(p.baseMana * levelScale);
+    let atk = Math.floor(p.baseAtk * levelScale);
+    let def = Math.floor(p.baseDef * levelScale);
+
+    // weapon
+    const wDef = weaponTypes.find(w=>w.id===p.weapon.type);
+    const wMat = materials[p.weapon.material];
+    atk += wDef.baseAtk + (wMat.atk || 0);
+
+    // armor
+    const aDef = armorTypes.find(a=>a.id===p.armor.type);
+    const aMat = materials[p.armor.material];
+    def += aDef.baseDef + (aMat.def || 0);
+    baseHP += aDef.hp + (aMat.hp || 0);
+    baseMana += (aDef.manaBonus || 0);
+
+    p.maxHP = baseHP;
+    p.maxMana = baseMana;
+    p.atk = Math.max(1,atk);
+    p.def = Math.max(0,def);
+    p.hp = p.maxHP;
+    p.mana = p.maxMana;
+    p.crit = 6 + (state.level-1); // percent
+    p.critMult = 1.6;
+  }
+
+  function spawnEnemy(){
+    const template = monsters[state.level-1];
+    // scale enemy slightly with random variance
+    const variance = 0.9 + Math.random()*0.4; // 0.9-1.3
+    const e = {
+      name: template.name,
+      maxHP: Math.floor(template.hp * (1 + (state.level-1)*0.18) * variance),
+      hp:null,
+      maxMana: Math.floor(template.mana * (1 + (state.level-1)*0.12)),
+      mana:null,
+      atk: Math.floor(template.atk * (1 + (state.level-1)*0.15)),
+      def: Math.floor(template.def * (1 + (state.level-1)*0.15)),
+      xp: template.xp + (state.level-1)*12
+    };
+    e.hp = e.maxHP; e.mana = e.maxMana;
+    state.enemy = e;
+    writeLine(`A wild ${e.name} appears — Level ${state.level} threat!`);
+  }
+
+  function renderAll(){
+    const p = state.player;
+    $('pHP').textContent = `${p.hp}/${p.maxHP}`;
+    $('pMana').textContent = `${p.mana}/${p.maxMana}`;
+    $('pAtk').textContent = p.atk;
+    $('pDef').textContent = p.def;
+    $('playerName').textContent = p.name + ` (Lv ${state.level})`;
+    const e = state.enemy;
+    $('enemyName').textContent = e ? e.name : '—';
+    $('eHP').textContent = e ? `${e.hp}/${e.maxHP}` : '--';
+    $('eMana').textContent = e ? `${e.mana}/${e.maxMana}` : '--';
+    $('eAtk').textContent = e ? e.atk : '--';
+    $('eDef').textContent = e ? e.def : '--';
+    $('levelNum').textContent = state.level;
+    $('xp').textContent = state.xp;
+    $('potions').textContent = state.potions;
+  }
+
+  // --- Combat mechanics ---
+  function computeDamage(attacker, defender, isMagic=false){
+    // damage = (attacker.atk * rand(0.85-1.15)) - defender.def*0.6
+    const variance = 0.85 + Math.random()*0.3;
+    let raw = Math.floor(attacker.atk * variance);
+    if(isMagic && attacker.mana!==undefined){ raw = Math.floor(attacker.atk * (0.9 + Math.random()*0.5)); }
+    let dmg = Math.max(1, raw - Math.floor(defender.def * 0.6));
+    // crit
+    const crit = (Math.random()*100) < (attacker.crit || 0);
+    if(crit){ dmg = Math.floor(dmg * (attacker.critMult || 1.5)); }
+    return {dmg,crit};
+  }
+
+  function playerAttack(){
+    const p = state.player;
+    const e = state.enemy;
+    const wDef = weaponTypes.find(w=>w.id===p.weapon.type);
+    const mat = materials[p.weapon.material];
+    const isMagic = !!wDef.magic;
+    const manaCost = Math.max(0, Math.floor((wDef.manaCost || 0) * (mat.manaCostMult || 1)));
+    if(manaCost>0 && p.mana < manaCost){ writeLine('Not enough mana to use that weapon effectively. Try a basic attack or use potion.'); return; }
+    p.mana -= manaCost;
+    const res = computeDamage({atk:p.atk,crit:p.crit,critMult:p.critMult, mana:p.mana}, e, isMagic);
+    e.hp -= res.dmg;
+    writeLine(`${p.name} attacks with ${p.weapon.type} (${p.weapon.material}) for ${res.dmg} dmg${res.crit? ' (CRIT!)':''}.`);
+    if(e.hp<=0){ enemyDefeated(); }
+    else{ enemyTurn(); }
+    renderAll();
+  }
+
+  function playerSkill(){
+    const p = state.player; const e = state.enemy;
+    // skill choice depends on weapon type
+    const w = weaponTypes.find(wt=>wt.id===p.weapon.type);
+    if(p.mana < 8){ writeLine('Skill requires at least 8 mana.'); return; }
+    p.mana -= 8;
+    let dmg=0; let desc='';
+    if(w.id==='Wand'){
+      dmg = Math.floor(p.atk * (1.4 + Math.random()*0.9));
+      e.hp -= dmg; desc = `casts Arcane Burst for ${dmg} dmg`;
+    } else if(w.id==='Axe'){
+      dmg = Math.floor((p.atk+3) * (1 + Math.random()*0.6));
+      e.hp -= dmg; desc = `performs Cleaving Strike for ${dmg} dmg`;
+      // small self-damage chance
+      if(Math.random()<0.12){ const self = Math.floor(dmg*0.08); p.hp -= self; writeLine(`Recoil hurts you for ${self} HP.`); }
+    } else if(w.id==='Dagger'){
+      dmg = Math.floor((p.atk) * (1 + Math.random()*0.9));
+      e.hp -= dmg; desc = `stabs quickly for ${dmg} dmg and attempts bleed.`;
+      if(Math.random()<0.45){ const bleed = Math.floor(dmg*0.12); writeLine(`Bleed: ${bleed} extra damage next turn.`); e._bleed = (e._bleed||0)+bleed; }
+    } else if(w.id==='Spear'){
+      dmg = Math.floor((p.atk+2)*(1+Math.random()*0.7)); e.hp -= dmg; desc = `lunges for ${dmg} dmg with armor-penetration.`; e.def = Math.max(0, e.def - 1);
+    } else { // Sword or fallback
+      dmg = Math.floor((p.atk+2)*(1+Math.random()*0.4)); e.hp -= dmg; desc = `unleashes Fiery Slash for ${dmg} dmg`;
+    }
+    writeLine(`${p.name} ${desc}.`);
+    if(e.hp<=0){ enemyDefeated(); }
+    else{ enemyTurn(); }
+    renderAll();
+  }
+
+  function playerDefend(){
+    const p = state.player; p._defendTurns = 1; writeLine(`${p.name} braces for incoming damage (defense boosted this turn).`); enemyTurn(); renderAll(); }
+
+  function playerUsePotion(){
+    if(state.potions<=0){ writeLine('No potions left.'); return; }
+    state.potions -= 1;
+    const p = state.player;
+    const heal = Math.min(p.maxHP - p.hp, Math.floor(p.maxHP*0.35));
+    p.hp += heal; p.mana = Math.min(p.maxMana, p.mana + Math.floor(p.maxMana*0.25));
+    writeLine(`${p.name} drinks a potion and recovers ${heal} HP and some mana.`);
+    enemyTurn(); renderAll();
+  }
+
+  function attemptFlee(){
+    const chance = 40 + (state.player.att ?? 0) - state.level*4; // dynamic
+    if(Math.random()*100 < chance){ writeLine('You slipped away safely!'); nextLevel(false); }
+    else{ writeLine('Flee failed! The enemy takes advantage.'); enemyTurn(); }
+  }
+
+  function enemyTurn(){
+    const e = state.enemy; const p = state.player;
+    if(!e || e.hp<=0) return;
+    // simple AI: if mana high, cast; if low HP, attempt heavy; else basic
+    let actionRoll = Math.random();
+    // apply bleed
+    if(e._bleed){ const b = e._bleed; e.hp -= b; writeLine(`${e.name} bleeds for ${b} damage.`); e._bleed = 0; if(e.hp<=0){ enemyDefeated(); return; }}
+
+    if(actionRoll < 0.2 && e.mana >= 8){ // cast
+      e.mana -= 8;
+      const dmg = Math.floor((e.atk+6) * (0.9 + Math.random()*0.5) - p.def*0.25);
+      const final = Math.max(1, dmg - (p._defendTurns? Math.floor(p.def*0.5):0));
+      p.hp -= final; writeLine(`${e.name} casts a dark spell for ${final} damage.`);
+    } else {
+      // normal attack
+      const result = computeDamage(e, p);
+      let damage = result.dmg;
+      // player's defend
+      if(p._defendTurns){ damage = Math.max(0, damage - Math.floor(p.def*0.7)); p._defendTurns = 0; }
+      p.hp -= damage; writeLine(`${e.name} attacks for ${damage} damage${result.crit? ' (CRIT!)':''}.`);
+    }
+
+    // after enemy hits, check player death
+    if(p.hp<=0){ writeLine('You have fallen... Game over.'); renderAll(); state.auto = false; }
+    renderAll();
+  }
+
+  function enemyDefeated(){
+    const e = state.enemy; const p = state.player;
+    writeLine(`${e.name} defeated! You gain ${e.xp} XP.`);
+    state.xp += e.xp; state.potions += (Math.random()<0.25 ? 1 : 0);
+    // small restore upon victory
+    p.hp = Math.min(p.maxHP, p.hp + Math.floor(p.maxHP*0.12));
+    p.mana = Math.min(p.maxMana, p.mana + Math.floor(p.maxMana*0.18));
+    // next level or finish
+    if(state.level>=7){ writeLine('Congratulations — you beat all 7 levels!'); state.auto=false; renderAll(); }
+    else{ // prompt next
+      writeLine('Prepare for the next foe. Click Do to continue to next level.');
+      state.enemy = null;
+      state.level += 1;
+    }
+    renderAll();
+  }
+
+  function nextLevel(forceSpawn=true){
+    if(state.level>7){ writeLine('You already finished the game. Restart to play again.'); return; }
+    if(forceSpawn){ spawnEnemy(); }
+    recalcPlayerStats();
+    renderAll();
+  }
+
+  // --- Controls wiring ---
+  document.addEventListener('click', e=>{
+    if(e.target.id==='openWar'){ openModal(); }
+  });
+  $('weaponSelect').addEventListener('change', ()=>{ equipFromSelection(); writeLine('Weapon changed.'); });
+  $('armorSelect').addEventListener('change', ()=>{ equipFromSelection(); writeLine('Armor changed.'); });
+  $('doAction').addEventListener('click', ()=>{
+    if(!state.enemy){ nextLevel(true); return; }
+    const act = $('actionSelect').value;
+    if(state.player.hp<=0){ writeLine('You cannot act — you are defeated. Restart or close.'); return; }
+    if(act==='attack'){ playerAttack(); }
+    else if(act==='skill'){ playerSkill(); }
+    else if(act==='defend'){ playerDefend(); }
+    else if(act==='item'){ playerUsePotion(); }
+    else if(act==='flee'){ attemptFlee(); }
+    renderAll();
+    if(state.auto && state.enemy && state.player.hp>0){ setTimeout(()=>{ $('doAction').click(); }, 800); }
+  });
+
+  $('autoFight').addEventListener('click', ()=>{
+    state.auto = !state.auto; $('autoFight').textContent = state.auto ? 'Stop Auto' : 'Auto Fight'; writeLine(state.auto? 'Auto-fight enabled.' : 'Auto-fight disabled.'); if(state.auto) $('doAction').click();
+  });
+
+  $('skipToNext').addEventListener('click', ()=>{ if(confirm('Skip to next level? (cheat)')){ state.level = Math.min(7, state.level+1); nextLevel(true); }});
+  $('restartBtn').addEventListener('click', ()=>{ if(confirm('Restart the whole game?')){ newGame(); }});
+  $('buyPotion').addEventListener('click', ()=>{ // buy potion with XP
+    if(state.xp < 30){ writeLine('You need 30 XP to buy a potion.'); return; }
+    state.xp -= 30; state.potions +=1; writeLine('Purchased 1 potion for 30 XP.'); renderAll();
+  });
+
+  // modal controls
+  const modalWrap = $('modalWrap');
+  $('closeModal').addEventListener('click', closeModal);
+  function openModal(){ modalWrap.style.display='flex'; modalWrap.setAttribute('aria-hidden','false'); }
+  function closeModal(){ modalWrap.style.display='none'; modalWrap.setAttribute('aria-hidden','true'); }
+
+  // keyboard support
+  document.addEventListener('keydown', (ev)=>{
+    if(modalWrap.style.display==='flex'){
+      if(ev.key==='Enter'){ $('doAction').click(); }
+      if(ev.key==='Escape'){ closeModal(); }
+    }
+  });
+
+  // init
+  newGame();
+  </script>
+</body>
+</html>

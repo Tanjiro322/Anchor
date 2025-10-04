@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Game Vault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#040810;--panel:#0c1324;--accent:#7dd3fc;--muted:#a3bffa;--glow:0 0 15px var(--accent),0 0 30px var(--accent);
+    }
+    body {
+      font-family:'Press Start 2P', monospace;
+      background: radial-gradient(circle at top, #0a1733, #000308);
+      color:#e6eef8;
+      margin:0;padding:0;
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+      text-align:center;
+    }
+    header {
+      margin-top:40px;
+      display:flex;flex-direction:column;align-items:center;
+      animation: glow 3s infinite alternate;
+    }
+    @keyframes glow {0%{filter:drop-shadow(0 0 10px var(--accent));}100%{filter:drop-shadow(0 0 25px var(--accent));}}
+    .icon {
+      font-size:80px;
+      color:var(--accent);
+      text-shadow:var(--glow);
+    }
+    h1 {
+      margin:16px 0;
+      font-size:16px;
+      color:var(--accent);
+      text-shadow:var(--glow);
+    }
+    p {
+      width:80%;
+      max-width:700px;
+      color:var(--muted);
+      font-size:10px;
+      line-height:1.6;
+      text-shadow:0 0 8px rgba(125,211,252,0.2);
+    }
+    .games-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:20px;
+      width:90%;
+      max-width:900px;
+      margin-top:50px;
+      padding-bottom:60px;
+    }
+    .game-card {
+      background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02));
+      border:1px solid rgba(125,211,252,0.1);
+      padding:20px;
+      border-radius:14px;
+      box-shadow:0 0 30px rgba(125,211,252,0.1);
+      transition:all 0.2s ease;
+      cursor:pointer;
+    }
+    .game-card:hover {
+      transform:translateY(-5px) scale(1.03);
+      box-shadow:0 0 40px rgba(125,211,252,0.3);
+    }
+    .game-icon {
+      font-size:50px;
+      color:var(--accent);
+      text-shadow:0 0 20px var(--accent);
+    }
+    .game-title {
+      margin-top:10px;
+      font-size:12px;
+      color:#fff;
+      text-shadow:0 0 8px var(--accent);
+    }
+    footer {
+      margin-top:auto;
+      padding:20px;
+      font-size:10px;
+      color:#5e7ea8;
+      opacity:0.6;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="icon">🎮</div>
+    <h1>The Game Vault</h1>
+    <p>Step into a world of fun, challenge, and creativity — a place where every click starts a new adventure. From fierce RPG battles to fast-paced arcade games, every experience here is built to test your skill, spark your imagination, and keep you playing for more. No downloads, no limits — just pure gameplay, right in your browser.</p>
+  </header>
+
+  <section class="games-grid">
+    <a class="game-card" href="RPG-game.html">
+      <div class="game-icon">⚔️</div>
+      <div class="game-title">WarGames — Text RPG</div>
+    </a>
+    <div class="game-card">
+      <div class="game-icon">🧩</div>
+      <div class="game-title">Coming Soon...</div>
+    </div>
+    <div class="game-card">
+      <div class="game-icon">🚀</div>
+      <div class="game-title">Coming Soon...</div>
+    </div>
+  </section>
+
+  <footer>© 2025 The Game Vault | Built on GitHub Pages</footer>
+</body>
+</html>
