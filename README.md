@@ -1,1 +1,1 @@
-# Anchor
+Step into a world of fun, challenge, and creativity — a place where every click starts a new adventure. From fierce RPG battles to fast-paced arcade games, every experience here is built to test your skill, spark your imagination, and keep you playing for more. No downloads, no limits — just pure gameplay, right in your browser.
